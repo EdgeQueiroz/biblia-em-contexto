@@ -6,4 +6,4 @@ Texto: Bíblia Portuguesa Mundial (BPM), em domínio público e ainda em revisã
 
 ## Hospedagem
 
-Em Settings → Pages, selecione Deploy from a branch, a branch padrão e a pasta / (root). Salve para publicar com GitHub Pages.
+Em Settings → Pages, selecione Deploy from a branch, a branch fileOrganizer e a pasta / (root). Salve para publicar com GitHub Pages.
