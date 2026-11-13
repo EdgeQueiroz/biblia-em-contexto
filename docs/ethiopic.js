@@ -3,6 +3,9 @@
 const ethiopicCanonUrl = 'https://www.ethiopianorthodox.org/english/canonical/books.html?lang=en';
 const ethiopicCanonStudy = 'https://www.islamic-awareness.org/bible/text/canon/ethiopican';
 const ethiopicLicense = 'https://creativecommons.org/licenses/by-sa/4.0/';
+const enochPortuguese = 'https://bibliaetiope.com.br/pt/henok';
+const enochPortugueseTerms = 'https://bibliaetiope.com.br/pt/termos';
+const ethiopicCollection = new Set(['ENO', 'JUB', '1MQ', '2MQ', '3MQ']);
 
 // The index separates entries that some lists group into a single book.
 const ethiopicOldTestament = [
@@ -37,7 +40,7 @@ function buildEthiopicCatalog(bpm, texts) {
   const index = new Map([...shared, ...texts, ...ethiopicIndexEntries].map(book => [book.id, book]));
   return [
     ...ethiopicOldTestament.map(id => index.get(id)),
-    ...shared.filter(book => book.group === 'nn'),
+    ...shared.filter(book => book.group === 'nn').map(book => index.get(book.id)),
     ...ethiopicIndexEntries.filter(book => book.group === 'broader'),
   ];
 }

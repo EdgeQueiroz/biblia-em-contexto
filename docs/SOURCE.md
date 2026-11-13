@@ -8,4 +8,8 @@ Verse text and source notes extracted without editorial correction; navigation b
 
 The Ge’ez data in docs/data/ethiopic are licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The importer extracts the printed-Bible edition divisions, normalizes whitespace, labels the Jubilees prologue as section 0 and adds letter suffixes to distinguish repeated verse numbers in the source. Other edition divisions in the XML are not used.
 
-To regenerate, download the five source XML files listed in import_ethiopic.ps1 from the pinned revision, save them as ENO.xml, JUB.xml, 1MQ.xml, 2MQ.xml and 3MQ.xml, and run `pwsh -File import_ethiopic.ps1 -SourceDirectory <directory>`.
+To regenerate the Ge’ez data, download the source XML files listed in import_ethiopic.ps1 from the pinned revision, save them as ENO.xml, JUB.xml, 1MQ.xml, 2MQ.xml, 3MQ.xml and JUD.xml, and run `pwsh -File import_ethiopic.ps1 -SourceDirectory <directory>`.
+
+The Carta de Judas in Ge’ez is transcribed from [Beta maṣāḥǝft, LIT3513Epistle](https://betamasaheft.eu/works/LIT3513Epistle/main), from the same repository revision and under CC BY-SA 4.0. Numbered lines are rendered as verses, with whitespace normalized.
+
+The preliminary Portuguese 1 Enoch translation is by [Bíblia Etíope / QVNK Studio](https://bibliaetiope.com.br/pt/henok), based on R. H. Charles (1917). The 108 chapters are republished with attribution under the [source’s terms](https://bibliaetiope.com.br/pt/termos). The Portuguese text has its own reuse terms and is distinct from the CC BY-SA 4.0 Ge’ez transcription.

@@ -53,3 +53,8 @@
 @media (max-width: 680px) {
   .library:has(#bible-ethiopic[aria-pressed="true"]) > #book-filter { display: block; }
 }
+
+#ethiopic-filter-picker[hidden], #enoch-language-picker[hidden] { display: none; }
+#ethiopic-filter-picker select { margin: 4px 0 12px; }
+#enoch-language-picker { max-width: 16em; margin: 0 0 16px; }
+#enoch-language-picker select { margin-top: 4px; }

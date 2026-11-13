@@ -6,12 +6,14 @@ const esc = value => String(value).replace(/[&<>"']/g, char => ({
 })[char]);
 const norm = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const bpmSource = 'https://ebible.org/details.php?id=porbrbsl';
+const ethiopicDataRevision = '?v=2';
 const catalogs = { bpm: [], ethiopic: [] };
 const defaults = { bpm: ['JHN', 1, '1'], ethiopic: ['ENO', 1, '1'] };
 const lastReference = {};
 const cache = {};
-let studies = [], introductions = {}, searchData, ethiopicSearchData;
+let studies = [], introductions = {}, searchData, ethiopicSearchData, enochSearchData;
 let current, chapterData = {}, activeBible = 'bpm', loadId = 0, searchId = 0;
+let ethiopicFilter = 'texts';
 
 function pref(key, value) {
   try {
@@ -77,7 +79,13 @@ function findBook(id, bible = activeBible) {
 }
 
 function allowed(book) {
-  return book && (activeBible === 'ethiopic' || $('canon').value !== 'protestant' || book.group !== 'aa');
+  if (!book) return false;
+  if (activeBible === 'ethiopic') return ethiopicFilter === 'all' || book.source === 'ethiopic';
+  return $('canon').value !== 'protestant' || book.group !== 'aa';
+}
+
+function enochInPortuguese() {
+  return $('enoch-language').value !== 'gez';
 }
 
 function bookNames(book) {
@@ -87,18 +95,22 @@ function bookNames(book) {
 function listBooks() {
   const query = norm($('book-filter').value);
   const labels = {
+    featured: 'Enoque, Jubileus e Meqabyan',
     oo: 'Antigo Testamento', aa: 'Deuterocanônicos e textos gregos', nn: 'Novo Testamento',
     broader: 'Novo Testamento · cânon mais amplo',
   };
   $('books').innerHTML = Object.entries(labels).map(([group, label]) => {
     const matching = catalogs[activeBible].filter(book =>
-      book.group === group && allowed(book) && bookNames(book).some(name => name.includes(query))
+      (ethiopicCollection.has(book.id) ? 'featured' : book.group) === group
+      && allowed(book) && bookNames(book).some(name => name.includes(query))
     );
     if (!matching.length) return '';
     return '<h3>' + label + '</h3>' + matching.map(book => {
       const active = book.id === current?.id;
       const chapter = book.chapters?.includes(1) ? 1 : book.chapters?.[0];
-      const badge = book.source === 'ethiopic' ? 'ge’ez' : book.chapters?.length || 'Ficha';
+      const badge = activeBible === 'bpm' ? book.chapters.length
+        : book.id === 'ENO' ? 'PT / ge’ez'
+        : book.source === 'ethiopic' ? 'ge’ez' : book.chapters?.length ? 'BPM' : 'Ficha';
       return `<a href="${linkFor(activeBible, book.id, chapter)}" class="${active ? 'active' : ''}" ${active ? 'aria-current="page"' : ''}>${esc(book.name)}<span>${badge}</span></a>`;
     }).join('');
   }).join('') || '<p class="small">Nenhum livro encontrado.</p>';
@@ -107,6 +119,20 @@ $('book-filter').oninput = listBooks;
 $('canon').onchange = () => {
   if (current && !allowed(current)) location.hash = linkFor('bpm', 'GEN');
   listBooks();
+};
+$('ethiopic-filter').onchange = () => {
+  ethiopicFilter = $('ethiopic-filter').value;
+  ++searchId;
+  $('results').hidden = true;
+  if (!allowed(current)) location.hash = linkFor('ethiopic', ...defaults.ethiopic);
+  else listBooks();
+};
+$('enoch-language').value = pref('bible-enoch-language') === 'gez' ? 'gez' : 'pt';
+$('enoch-language').onchange = () => {
+  pref('bible-enoch-language', $('enoch-language').value);
+  ++searchId;
+  $('results').hidden = true;
+  route(true);
 };
 for (const bible of ['bpm', 'ethiopic']) {
   $('bible-' + bible).onclick = () => {
@@ -122,6 +148,7 @@ function showBibleControls() {
   $('canon').hidden = ethiopic;
   $('canon-note').hidden = ethiopic;
   $('ethiopic-library-note').hidden = !ethiopic;
+  $('ethiopic-filter-picker').hidden = !ethiopic;
   $('reading-edition').textContent = ethiopic ? 'BÍBLIA ETÍOPE' : 'BÍBLIA PORTUGUESA MUNDIAL';
 }
 
@@ -141,7 +168,7 @@ function externalLink(url, label) {
 
 function renderStudy(verse) {
   const number = parseInt(verse.n, 10);
-  const collection = current.source === 'ethiopic' ? ethiopicStudies : studies;
+  const collection = current.source === 'ethiopic' && current.id !== 'JUD' ? ethiopicStudies : studies;
   const study = collection.find(item =>
     item.book === current.id && item.chapter === chapterData.c && number >= item.start && number <= item.end
   );
@@ -158,23 +185,34 @@ function renderStudy(verse) {
     content += '<h4>Conexões bíblicas</h4>' + study.refs.map(refLink).join('')
       + '<p class="small">Síntese editorial com auxílio de IA · sem revisão teológica humana. Leia os critérios em Sobre & fontes.</p>';
   }
-  if (activeBible === 'bpm' && current.id === 'JUD' && number >= 14 && number <= 15) {
+  if (current.id === 'JUD' && number >= 14 && number <= 15) {
     content += '<h4>Na Bíblia Etíope</h4>'
       + `<a class="reference" href="${linkFor('ethiopic', 'ENO', 1, 9)}">1 Enoque 1:9</a>`;
+  }
+  if (current.id === 'JUD') {
+    const otherBible = activeBible === 'bpm' ? 'ethiopic' : 'bpm';
+    const edition = otherBible === 'ethiopic' ? 'Judas em ge’ez' : 'Judas em português (BPM)';
+    content += `<p><a class="reference" href="${linkFor(otherBible, 'JUD', 1, verse.n)}">${edition}</a></p>`;
   }
   if (verse.notes.length) {
     content += (current.source === 'ethiopic' ? '<h4>Nota da transcrição</h4>' : '<h4>Notas da tradução · BPM</h4>')
       + verse.notes.map(note => '<p>' + esc(note) + '</p>').join('');
   }
   const chapterNumber = String(chapterData.c).padStart(current.id === 'PSA' ? 3 : 2, '0');
-  const url = current.url || `https://ebible.org/porbrbsl/${current.id}${chapterNumber}.htm#V${encodeURIComponent(verse.n)}`;
+  const url = current.id === 'ENO' && enochInPortuguese()
+    ? `${enochPortuguese}/${chapterData.c}#v${encodeURIComponent(verse.n)}`
+    : current.url || `https://ebible.org/porbrbsl/${current.id}${chapterNumber}.htm#V${encodeURIComponent(verse.n)}`;
   $('comment').innerHTML = content + '<p class="small">' + externalLink(url, 'Conferir o texto na fonte ↗') + '</p>';
 }
 
 function selectVerse(number, scroll = false) {
   const verses = chapterData.verses || [];
-  const verse = verses.find(item => item.n === String(number)) || verses[0];
+  const exact = verses.find(item => item.n === String(number));
+  const verse = exact || verses[0];
   if (!verse) return;
+  if (!exact && current.id === 'ENO' && String(number) !== '1') {
+    notice('Este número de versículo não está disponível na edição selecionada.');
+  }
   lastReference[activeBible] = [current.id, chapterData.c, verse.n];
   document.querySelectorAll('.verse').forEach(element =>
     element.classList.toggle('selected', element.dataset.verse === verse.n)
@@ -187,21 +225,36 @@ function setEditionNote(book) {
   const hasText = Boolean(book.chapters?.length);
   $('chapter-picker').hidden = !hasText;
   $('chapter-nav').hidden = !hasText;
-  $('parallel-note').hidden = !book.translation;
-  $('parallel-note').innerHTML = book.translation
-    ? externalLink(book.translation, 'Ler em português · tradução preliminar ↗')
+  $('enoch-language-picker').hidden = book.id !== 'ENO';
+  $('parallel-note').hidden = !book.translation || book.id === 'ENO';
+  $('parallel-note').innerHTML = book.translation && book.id !== 'ENO'
+    ? externalLink(book.translation, 'Ler em português em outro site · tradução preliminar ↗')
     : '';
   $('chapter-note').innerHTML = '';
   if (book.source === 'ethiopic') {
-    $('edition-note').textContent = 'Ge’ez · edição impressa da Igreja Ortodoxa Tewahedo Etíope';
+    $('edition-note').textContent = book.id === 'JUD'
+      ? 'Ge’ez · edição etíope da Carta de Judas'
+      : 'Ge’ez · edição impressa da Igreja Ortodoxa Tewahedo Etíope';
     $('source-note').innerHTML = 'Transcrição: ' + externalLink(book.url, 'Beta maṣāḥǝft')
       + ' · ' + externalLink(ethiopicLicense, 'CC BY-SA 4.0') + '.';
+    if (book.id === 'ENO' && enochInPortuguese()) {
+      $('edition-note').textContent = 'Português · tradução preliminar do Bíblia Etíope / QVNK Studio, a partir de R. H. Charles (1917).';
+      $('source-note').innerHTML = 'Tradução em português: ' + externalLink(enochPortuguese, 'Bíblia Etíope / QVNK Studio')
+        + ' · ' + externalLink(enochPortugueseTerms, 'Condições de republicação') + '.';
+    }
+    if (book.id === 'ENO') {
+      $('chapter-note').innerHTML = '<p class="small">O português e o ge’ez seguem edições próprias. Os números de alguns versículos podem diferir.</p>';
+    }
+    if (book.id === 'JUD') {
+      $('chapter-note').innerHTML = '<p class="alert">A Carta de Judas integra os cânones católico, protestante e etíope. '
+        + '<a href="' + linkFor('bpm', 'JUD') + '">Ler Judas em português na BPM</a>.</p>';
+    }
     if (book.id.endsWith('MQ')) {
       $('chapter-note').innerHTML = '<p class="alert">Os livros de Meqabyan são obras etíopes distintas dos livros gregos dos Macabeus.</p>';
     }
   } else if (hasText) {
     $('edition-note').textContent = activeBible === 'ethiopic'
-      ? 'Texto de referência em português · Bíblia Portuguesa Mundial'
+      ? 'Livro em comum · texto de referência da Bíblia Portuguesa Mundial (BPM)'
       : 'Tradução em domínio público · texto ainda em revisão pela fonte.';
     $('source-note').innerHTML = 'Texto: ' + externalLink(bpmSource, 'eBible.org · BPM')
       + '. Notas da tradução disponíveis ao selecionar os versículos.';
@@ -219,7 +272,7 @@ function setEditionNote(book) {
   }
 }
 
-async function route() {
+async function route(force = false) {
   if (!catalogs.bpm.length) return;
   const raw = location.hash.slice(1);
   if (raw === 'reading' && current) return;
@@ -243,8 +296,13 @@ async function route() {
     $('book-filter').value = '';
   }
   showBibleControls();
-  if (!allowed(book)) $('canon').value = 'all';
-  if (!changedBible && current?.id === id && chapterData.c === chapter) {
+  if (!allowed(book)) {
+    if (bible === 'ethiopic') {
+      ethiopicFilter = 'all';
+      $('ethiopic-filter').value = 'all';
+    } else $('canon').value = 'all';
+  }
+  if (!force && !changedBible && current?.id === id && chapterData.c === chapter) {
     selectVerse(verse || '1', true);
     return;
   }
@@ -277,14 +335,15 @@ async function route() {
   $('prev').disabled = true;
   $('next').disabled = true;
   try {
-    const path = './data/' + (book.source === 'ethiopic' ? 'ethiopic/' : '') + id + '.json';
+    const inPortuguese = id === 'ENO' && enochInPortuguese();
+    const path = './data/' + (book.source === 'ethiopic' ? 'ethiopic/' : '') + id + (inPortuguese ? '-pt' : '') + '.json';
     const data = cache[path] || (cache[path] = await json(path));
     if (request !== loadId) return;
     const verses = data[chapter];
     if (!verses?.length) throw Error('Capítulo indisponível.');
     chapterData = { c: chapter, verses };
     const introduction = introductions[id + '/' + chapter];
-    const lang = book.source === 'ethiopic' ? ' lang="gez"' : '';
+    const lang = book.source === 'ethiopic' && !inPortuguese ? ' lang="gez"' : '';
     $('verses').innerHTML = (introduction ? '<p class="psalm-title">' + esc(introduction) + '</p>' : '')
       + verses.map(item => `<p class="verse" id="v-${esc(item.n)}" data-verse="${esc(item.n)}"><a href="${linkFor(bible, id, chapter, item.n)}" aria-label="Estudar ${esc(refLabel(id, chapter, item.n))}">${esc(item.n)}</a><span${lang}>${esc(item.t)}</span>${item.notes.length ? ' <span class="small" title="Há notas sobre este versículo">*</span>' : ''}</p>`).join('');
     selectVerse(verse || verses[0].n, parseInt(verse, 10) > 1);
@@ -357,16 +416,23 @@ $('search-form').onsubmit = async event => {
   if (theme) return topic(theme);
   resultShell('Buscando…', '<p>Consultando o texto disponível.</p>');
   try {
-    const [portuguese, ethiopic] = await Promise.all([
+    const [portuguese, ethiopic, enoch] = await Promise.all([
       searchData || (searchData = json('./data/search.json').catch(error => { searchData = null; throw error; })),
       activeBible === 'ethiopic'
-        ? ethiopicSearchData || (ethiopicSearchData = json('./data/ethiopic/search.json').catch(error => { ethiopicSearchData = null; throw error; }))
+        ? ethiopicSearchData || (ethiopicSearchData = json('./data/ethiopic/search.json' + ethiopicDataRevision).catch(error => { ethiopicSearchData = null; throw error; }))
         : [],
+      activeBible === 'ethiopic' && enochInPortuguese()
+        ? enochSearchData || (enochSearchData = json('./data/ethiopic/ENO-pt.json').catch(error => { enochSearchData = null; throw error; }))
+        : null,
     ]);
     if (request !== searchId) return;
     const permitted = new Set(catalogs[activeBible].filter(allowed).map(book => book.id));
     const words = query.split(/\s+/);
-    const hits = [...portuguese, ...ethiopic].filter(row => {
+    const traditional = activeBible === 'ethiopic' ? portuguese.filter(row => findBook(row[0])?.source === 'bpm') : portuguese;
+    const original = enoch ? ethiopic.filter(row => row[0] !== 'ENO') : ethiopic;
+    const translated = enoch ? Object.entries(enoch).flatMap(([chapter, verses]) =>
+      verses.map(verse => ['ENO', +chapter, verse.n, verse.t])) : [];
+    const hits = [...translated, ...original, ...traditional].filter(row => {
       if (!permitted.has(row[0])) return false;
       const text = norm(row[3]);
       return words.every(word => text.includes(word));
@@ -374,7 +440,7 @@ $('search-form').onsubmit = async event => {
     resultShell(hits.length + ' resultados',
       '<p class="small">' + (hits.length > 100 ? 'Mostrando os primeiros 100.' : 'Resultados nos livros selecionados.') + '</p>'
       + hits.slice(0, 100).map(([id, chapter, verse, text]) => {
-        const lang = findBook(id)?.source === 'ethiopic' ? ' lang="gez"' : '';
+        const lang = findBook(id)?.source === 'ethiopic' && !(id === 'ENO' && enoch) ? ' lang="gez"' : '';
         return `<a class="result" href="${linkFor(activeBible, id, chapter, verse)}"><strong>${esc(refLabel(id, chapter, verse))}</strong><span${lang}>${esc(text)}</span></a>`;
       }).join('')
       + (hits.length ? '' : '<p>Tente outra palavra ou uma referência como João 3:16.</p>'));
@@ -383,12 +449,12 @@ $('search-form').onsubmit = async event => {
   }
 };
 
-window.addEventListener('hashchange', route);
+window.addEventListener('hashchange', () => route());
 (async () => {
   try {
     const [books, notes, intros, ethiopicBooks] = await Promise.all([
       json('./data/books.json'), json('./data/studies.json'),
-      json('./data/introductions.json'), json('./data/ethiopic/books.json'),
+      json('./data/introductions.json'), json('./data/ethiopic/books.json' + ethiopicDataRevision),
     ]);
     catalogs.bpm = books;
     catalogs.ethiopic = buildEthiopicCatalog(books, ethiopicBooks);

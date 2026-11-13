@@ -9,6 +9,7 @@ $texts = [ordered]@{
     '1MQ' = @{ Name = '1 Meqabyan'; Work = '1001-2000/LIT1819Maccab.xml'; Aliases = @() }
     '2MQ' = @{ Name = '2 Meqabyan'; Work = '5001-6000/LIT5840SecondEthioMaccabees.xml'; Aliases = @() }
     '3MQ' = @{ Name = '3 Meqabyan'; Work = '5001-6000/LIT5839ThirdEthioMaccabees.xml'; Aliases = @() }
+    JUD = @{ Name = 'Judas'; Work = '3001-4000/LIT3513Epistle.xml'; Group = 'nn'; Aliases = @('Carta de Judas', 'Epístola de Judas') }
 }
 
 function Write-Json($Path, $Value) {
@@ -28,13 +29,15 @@ foreach ($entry in $texts.GetEnumerator()) {
     $ns = [Xml.XmlNamespaceManager]::new($xml.NameTable)
     $ns.AddNamespace('t', 'http://www.tei-c.org/ns/1.0')
     $edition = $xml.SelectNodes('//t:div[@type="edition"]', $ns) | Where-Object {
-        $_.SelectSingleNode('t:note', $ns).InnerText -match 'EOTC printed Bible|printed EOTC Bible'
+        if ($code -eq 'JUD') { $_.GetAttribute('lang', 'http://www.w3.org/XML/1998/namespace') -eq 'gez' }
+        else { $_.SelectSingleNode('t:note', $ns).InnerText -match 'EOTC printed Bible|printed EOTC Bible' }
     }
     if (@($edition).Count -ne 1) { throw "Printed edition missing or ambiguous for $code" }
 
     $chapters = [ordered]@{}
-    foreach ($chapter in $edition.SelectNodes('t:div[@subtype="chapter"]', $ns)) {
-        $number = $chapter.GetAttribute('n')
+    $divisions = if ($code -eq 'JUD') { ,$edition } else { $edition.SelectNodes('t:div[@subtype="chapter"]', $ns) }
+    foreach ($chapter in $divisions) {
+        $number = if ($code -eq 'JUD') { '1' } else { $chapter.GetAttribute('n') }
         if ($chapter.GetAttribute('id', 'http://www.w3.org/XML/1998/namespace') -eq 'introd') {
             $number = '0'
         } elseif (-not $number) {
@@ -43,7 +46,7 @@ foreach ($entry in $texts.GetEnumerator()) {
         if ($number -notmatch '^\d+$' -or $chapters.Contains($number)) { throw "Invalid chapter $number in $code" }
         $verses = [Collections.Generic.List[object]]::new()
         $labels = @{}
-        foreach ($line in $chapter.SelectNodes('t:ab/t:l', $ns)) {
+        foreach ($line in $chapter.SelectNodes('t:ab/t:l[@n]', $ns)) {
             $verse = $line.GetAttribute('n')
             $text = ($line.InnerText -replace '\s+', ' ').Trim()
             if (-not $verse -or -not $text) {
@@ -68,7 +71,7 @@ foreach ($entry in $texts.GetEnumerator()) {
     }
     Write-Json (Join-Path $directory "$code.json") $chapters
     $books.Add(@{
-        id = $code; name = $book.Name; chapters = $numbers; group = 'oo'; source = 'ethiopic'
+        id = $code; name = $book.Name; chapters = $numbers; group = ($book.Group ?? 'oo'); source = 'ethiopic'
         url = $repository + $book.Work; translation = $book.Translation; aliases = $book.Aliases
     })
     Write-Output "$code $($chapters.Count) sections"
