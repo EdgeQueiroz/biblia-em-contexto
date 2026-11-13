@@ -1,0 +1,46 @@
+.hub { min-height: calc(100vh - 180px); padding: 0; background: var(--paper); }
+.hub[hidden], .workspace[hidden] { display: none; }
+.hub-shell { max-width: 1260px; margin: 0 auto; }
+.hub-intro { padding: 85px 44px 78px; max-width: 920px; }
+.hub-kicker { color: var(--accent); font: 700 11px/1.5 system-ui, sans-serif; letter-spacing: .15em; margin: 0 0 18px; }
+.hub-intro h1 { font: 64px/1.04 var(--serif); letter-spacing: -.035em; margin: 0; }
+.hub-intro h1 em { color: var(--accent); font-weight: normal; }
+.hub-intro > p:not(.hub-kicker) { color: var(--muted); max-width: 590px; font-size: 18px; line-height: 1.7; margin: 25px 0 28px; }
+.hub-primary { display: inline-flex; align-items: center; gap: 28px; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 4px; padding: 13px 19px; font-size: 14px; font-weight: 650; }
+.hub-primary:hover { opacity: .86; }
+.hub-collection { border-top: 1px solid var(--line); padding: 55px 44px 64px; }
+.hub-section-head { display: flex; gap: 35px; align-items: end; justify-content: space-between; margin-bottom: 28px; }
+.hub-section-head .hub-kicker { margin-bottom: 9px; }
+.hub-section-head h2 { font: 40px/1.1 var(--serif); margin: 0; letter-spacing: -.02em; }
+.hub-section-head > p { max-width: 390px; color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
+.hub-bible-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.hub-bible-card { min-height: 245px; display: flex; flex-direction: column; justify-content: space-between; padding: 29px; border: 1px solid var(--line); background: var(--bg); text-decoration: none; }
+.hub-bible-card.featured { background: var(--wash); }
+.hub-tag, .hub-work div > span { color: var(--accent); font: 700 10px/1.5 system-ui, sans-serif; letter-spacing: .12em; }
+.hub-bible-card h3 { font: 29px/1.17 var(--serif); margin: 15px 0 10px; }
+.hub-bible-card p { color: var(--muted); font-size: 14px; line-height: 1.65; max-width: 420px; margin: 0; }
+.hub-card-action, .hub-work-link { font-size: 13px; font-weight: 700; color: var(--accent); }
+.hub-card-action { margin-top: 25px; }
+.hub-bible-card:hover, .hub-work:hover { border-color: var(--accent); }
+.hub-works { border-top: 1px solid var(--line); }
+.hub-work { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+.hub-work h3 { font: 24px/1.2 var(--serif); margin: 6px 0; }
+.hub-work p { color: var(--muted); font-size: 14px; margin: 0; }
+.hub-work-link { flex-shrink: 0; }
+.hub-source { font-size: 13px; color: var(--muted); margin: 24px 0 0; }
+.hub-home-link { font-size: 14px; white-space: nowrap; }
+@media (max-width: 680px) {
+  .hub-intro { padding: 55px 22px 52px; }
+  .hub-intro h1 { font-size: clamp(43px, 11vw, 58px); }
+  .hub-intro > p:not(.hub-kicker) { font-size: 16px; }
+  .hub-collection { padding: 38px 22px 44px; }
+  .hub-section-head { display: block; }
+  .hub-section-head h2 { font-size: 34px; }
+  .hub-section-head > p { margin-top: 13px; }
+  .hub-bible-grid { grid-template-columns: 1fr; }
+  .hub-bible-card { min-height: 205px; padding: 23px; }
+  .hub-work { align-items: flex-start; }
+  .hub-work h3 { font-size: 22px; }
+  .hub-work-link { margin-top: 7px; }
+}
+

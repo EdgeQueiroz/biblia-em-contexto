@@ -275,6 +275,17 @@ function setEditionNote(book) {
 async function route(force = false) {
   if (!catalogs.bpm.length) return;
   const raw = location.hash.slice(1);
+  const showHub = !raw || ['inicio', 'hub', 'colecao-biblica', 'colecao-espirita'].includes(raw);
+  $('hub').hidden = !showHub;
+  document.querySelector('.workspace').hidden = showHub;
+  $('skip-main').href = showHub ? '#hub' : '#reading';
+  if (showHub) {
+    ++loadId;
+    document.title = 'Escrituras em Contexto';
+    if (raw.startsWith('colecao-')) requestAnimationFrame(() => $(raw)?.scrollIntoView({ block: 'start' }));
+    else window.scrollTo(0, 0);
+    return;
+  }
   if (raw === 'reading' && current) return;
   const parts = raw.split('/');
   const bible = parts[0] === 'etiope' ? 'ethiopic' : 'bpm';
@@ -303,6 +314,7 @@ async function route(force = false) {
     } else $('canon').value = 'all';
   }
   if (!force && !changedBible && current?.id === id && chapterData.c === chapter) {
+    document.title = book.name + ' ' + chapter + ' · Bíblia em Contexto';
     selectVerse(verse || '1', true);
     return;
   }
@@ -467,7 +479,7 @@ window.addEventListener('hashchange', () => route());
       const button = event.target.closest('button');
       if (button) topic(button.dataset.topic);
     };
-    if (!location.hash) history.replaceState(null, '', linkFor('bpm', ...defaults.bpm));
+    if (!location.hash) history.replaceState(null, '', '#inicio');
     await route();
   } catch {
     $('verses').innerHTML = '<p>Não foi possível abrir a biblioteca. Atualize a página para tentar novamente.</p>';
