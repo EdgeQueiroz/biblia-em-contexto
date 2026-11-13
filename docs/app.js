@@ -18,7 +18,8 @@ const spiritBooks = {
 };
 const lastReference = {};
 const cache = {};
-let studies = [], introductions = {}, searchData, ethiopicSearchData, enochSearchData;
+let studies = [], introductions = {}, searchData, ethiopicSearchData, enochSearchData, jubileeSearchData;
+let spiritData, spiritKey, spiritPage;
 let current, chapterData = {}, activeBible = 'bpm', loadId = 0, searchId = 0;
 let ethiopicFilter = 'texts';
 
@@ -116,7 +117,7 @@ function listBooks() {
       const active = book.id === current?.id;
       const chapter = book.chapters?.includes(1) ? 1 : book.chapters?.[0];
       const badge = activeBible === 'bpm' ? book.chapters.length
-        : book.id === 'ENO' ? 'PT / ge’ez'
+        : ['ENO', 'JUB', 'JUD'].includes(book.id) ? 'PT / ge’ez'
         : book.source === 'ethiopic' ? 'ge’ez' : book.chapters?.length ? 'BPM' : 'Ficha';
       return `<a href="${linkFor(activeBible, book.id, chapter)}" class="${active ? 'active' : ''}" ${active ? 'aria-current="page"' : ''}>${esc(book.name)}<span>${badge}</span></a>`;
     }).join('');
@@ -206,8 +207,9 @@ function renderStudy(verse) {
       + verse.notes.map(note => '<p>' + esc(note) + '</p>').join('');
   }
   const chapterNumber = String(chapterData.c).padStart(current.id === 'PSA' ? 3 : 2, '0');
-  const url = current.id === 'ENO' && enochInPortuguese()
-    ? `${enochPortuguese}/${chapterData.c}#v${encodeURIComponent(verse.n)}`
+  const url = ['ENO', 'JUB'].includes(current.id) && enochInPortuguese()
+    ? `${current.id === 'ENO' ? enochPortuguese : 'https://bibliaetiope.com.br/pt/jubileus'}/${chapterData.c}#v${encodeURIComponent(verse.n)}`
+    : current.id === 'JUD' && enochInPortuguese() ? `https://ebible.org/porbrbsl/JUD01.htm#V${encodeURIComponent(verse.n)}`
     : current.url || `https://ebible.org/porbrbsl/${current.id}${chapterNumber}.htm#V${encodeURIComponent(verse.n)}`;
   $('comment').innerHTML = content + '<p class="small">' + externalLink(url, 'Conferir o texto na fonte ↗') + '</p>';
 }
@@ -232,9 +234,9 @@ function setEditionNote(book) {
   const hasText = Boolean(book.chapters?.length);
   $('chapter-picker').hidden = !hasText;
   $('chapter-nav').hidden = !hasText;
-  $('enoch-language-picker').hidden = book.id !== 'ENO';
-  $('parallel-note').hidden = !book.translation || book.id === 'ENO';
-  $('parallel-note').innerHTML = book.translation && book.id !== 'ENO'
+  $('enoch-language-picker').hidden = book.source !== 'ethiopic';
+  $('parallel-note').hidden = !book.translation || ['ENO', 'JUB'].includes(book.id);
+  $('parallel-note').innerHTML = book.translation && !['ENO', 'JUB'].includes(book.id)
     ? externalLink(book.translation, 'Ler em português em outro site · tradução preliminar ↗')
     : '';
   $('chapter-note').innerHTML = '';
@@ -244,20 +246,24 @@ function setEditionNote(book) {
       : 'Ge’ez · edição impressa da Igreja Ortodoxa Tewahedo Etíope';
     $('source-note').innerHTML = 'Transcrição: ' + externalLink(book.url, 'Beta maṣāḥǝft')
       + ' · ' + externalLink(ethiopicLicense, 'CC BY-SA 4.0') + '.';
-    if (book.id === 'ENO' && enochInPortuguese()) {
-      $('edition-note').textContent = 'Português · tradução preliminar do Bíblia Etíope / QVNK Studio, a partir de R. H. Charles (1917).';
-      $('source-note').innerHTML = 'Tradução em português: ' + externalLink(enochPortuguese, 'Bíblia Etíope / QVNK Studio')
+    if (['ENO', 'JUB'].includes(book.id) && enochInPortuguese()) {
+      $('edition-note').textContent = 'Português — tradução preliminar do Bíblia Etíope / QVNK Studio, a partir de R. H. Charles.';
+      $('source-note').innerHTML = 'Tradução em português: ' + externalLink(book.id === 'ENO' ? enochPortuguese : 'https://bibliaetiope.com.br/pt/jubileus', 'Bíblia Etíope / QVNK Studio')
         + ' · ' + externalLink(enochPortugueseTerms, 'Condições de republicação') + '.';
     }
-    if (book.id === 'ENO') {
+    if (['ENO', 'JUB'].includes(book.id)) {
       $('chapter-note').innerHTML = '<p class="small">O português e o ge’ez seguem edições próprias. Os números de alguns versículos podem diferir.</p>';
     }
     if (book.id === 'JUD') {
+      if (enochInPortuguese()) {
+        $('edition-note').textContent = 'Português — Bíblia Portuguesa Mundial, texto de referência para o livro em comum.';
+        $('source-note').innerHTML = 'Texto: ' + externalLink(bpmSource, 'eBible.org — Bíblia Portuguesa Mundial') + '.';
+      }
       $('chapter-note').innerHTML = '<p class="alert">A Carta de Judas integra os cânones católico, protestante e etíope. '
         + '<a href="' + linkFor('bpm', 'JUD') + '">Ler Judas em português na BPM</a>.</p>';
     }
     if (book.id.endsWith('MQ')) {
-      $('chapter-note').innerHTML = '<p class="alert">Os livros de Meqabyan são obras etíopes distintas dos livros gregos dos Macabeus.</p>';
+      $('chapter-note').innerHTML = '<p class="alert">Os livros de Meqabyan são obras etíopes distintas dos livros gregos dos Macabeus. A tradução em português ainda não está disponível aqui.</p>';
     }
   } else if (hasText) {
     $('edition-note').textContent = activeBible === 'ethiopic'
@@ -306,12 +312,25 @@ async function route(force = false) {
     const requested = raw.split('/')[1] || 'espiritos';
     const key = Object.hasOwn(spiritBooks, requested) ? requested : 'espiritos';
     const book = spiritBooks[key];
-    const source = 'https://celp.org.br/wp-content/uploads/2023/06/' + book.file;
     $('spirit-title').textContent = book.title;
     $('spirit-book-select').value = key;
-    $('spirit-external').href = source;
-    $('spirit-frame').title = 'Leitura de ' + book.title;
-    if ($('spirit-frame').getAttribute('src') !== source) $('spirit-frame').src = source;
+    $('spirit-source-link').href = key === 'genese' ? 'https://www.febnet.org.br/wp-content/uploads/2012/07/WEB-A-Genese-Guillon.pdf' : 'https://celp.org.br/apostilas/';
+    $('spirit-source-link').textContent = key === 'genese' ? 'Federação Espírita Brasileira' : 'Casa Espírita Luiz Picelli';
+    $('spirit-results').hidden = true;
+    $('spirit-text').innerHTML = '<p>Carregando o texto…</p>';
+    const request = loadId;
+    try {
+      const path = './data/spirit/' + key + '.json';
+      const data = cache[path] || (cache[path] = await json(path));
+      if (request !== loadId) return;
+      spiritData = data;
+      spiritKey = key;
+      const initial = { espiritos: 13, mediuns: 12, evangelho: 17, ceu: 11, genese: 10 }[key];
+      const page = Math.max(1, Math.min(data.pages.length, Number(raw.split('/')[2]) || initial));
+      showSpiritPage(page);
+    } catch {
+      if (request === loadId) $('spirit-text').innerHTML = '<p>Não foi possível carregar o livro. Atualize a página para tentar novamente.</p>';
+    }
     document.querySelectorAll('.spirit-book-list a').forEach(link => {
       if (link.dataset.spiritBook === key) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
@@ -368,6 +387,14 @@ async function route(force = false) {
   document.title = book.name + heading + ' · Bíblia em Contexto';
   setEditionNote(book);
 
+  if (book.id.endsWith('MQ') && enochInPortuguese()) {
+    $('edition-note').textContent = 'Português — tradução ainda indisponível neste leitor.';
+    $('chapter-picker').hidden = true;
+    $('chapter-nav').hidden = true;
+    $('verses').innerHTML = '<p>A tradução deste livro para o português ainda não está disponível. Se desejar, selecione ge’ez acima para consultar o texto original.</p>';
+    return;
+  }
+
   if (!book.chapters) {
     $('verses').innerHTML = '<p>' + esc(book.description || 'Esta obra faz parte do índice da tradição etíope e aguarda uma fonte textual para leitura aqui.') + '</p>'
       + (book.reference ? refLink(book.reference) : '');
@@ -381,8 +408,9 @@ async function route(force = false) {
   $('prev').disabled = true;
   $('next').disabled = true;
   try {
-    const inPortuguese = id === 'ENO' && enochInPortuguese();
-    const path = './data/' + (book.source === 'ethiopic' ? 'ethiopic/' : '') + id + (inPortuguese ? '-pt' : '') + '.json';
+    const inPortuguese = ['ENO', 'JUB', 'JUD'].includes(id) && enochInPortuguese();
+    const useBpm = id === 'JUD' && inPortuguese;
+    const path = './data/' + (book.source === 'ethiopic' && !useBpm ? 'ethiopic/' : '') + id + (inPortuguese && !useBpm ? '-pt' : '') + '.json';
     const data = cache[path] || (cache[path] = await json(path));
     if (request !== loadId) return;
     const verses = data[chapter];
@@ -462,7 +490,7 @@ $('search-form').onsubmit = async event => {
   if (theme) return topic(theme);
   resultShell('Buscando…', '<p>Consultando o texto disponível.</p>');
   try {
-    const [portuguese, ethiopic, enoch] = await Promise.all([
+    const [portuguese, ethiopic, enoch, jubilee] = await Promise.all([
       searchData || (searchData = json('./data/search.json').catch(error => { searchData = null; throw error; })),
       activeBible === 'ethiopic'
         ? ethiopicSearchData || (ethiopicSearchData = json('./data/ethiopic/search.json' + ethiopicDataRevision).catch(error => { ethiopicSearchData = null; throw error; }))
@@ -470,14 +498,18 @@ $('search-form').onsubmit = async event => {
       activeBible === 'ethiopic' && enochInPortuguese()
         ? enochSearchData || (enochSearchData = json('./data/ethiopic/ENO-pt.json').catch(error => { enochSearchData = null; throw error; }))
         : null,
+      activeBible === 'ethiopic' && enochInPortuguese()
+        ? jubileeSearchData || (jubileeSearchData = json('./data/ethiopic/JUB-pt.json').catch(error => { jubileeSearchData = null; throw error; }))
+        : null,
     ]);
     if (request !== searchId) return;
     const permitted = new Set(catalogs[activeBible].filter(allowed).map(book => book.id));
     const words = query.split(/\s+/);
-    const traditional = activeBible === 'ethiopic' ? portuguese.filter(row => findBook(row[0])?.source === 'bpm') : portuguese;
-    const original = enoch ? ethiopic.filter(row => row[0] !== 'ENO') : ethiopic;
+    const traditional = activeBible === 'ethiopic' ? portuguese.filter(row => findBook(row[0])?.source === 'bpm' || (row[0] === 'JUD' && enochInPortuguese())) : portuguese;
+    const original = enoch ? ethiopic.filter(row => !['ENO', 'JUB', 'JUD'].includes(row[0])) : ethiopic;
     const translated = enoch ? Object.entries(enoch).flatMap(([chapter, verses]) =>
       verses.map(verse => ['ENO', +chapter, verse.n, verse.t])) : [];
+    if (jubilee) translated.push(...Object.entries(jubilee).flatMap(([chapter, verses]) => verses.map(verse => ['JUB', +chapter, verse.n, verse.t])));
     const hits = [...translated, ...original, ...traditional].filter(row => {
       if (!permitted.has(row[0])) return false;
       const text = norm(row[3]);
@@ -486,7 +518,7 @@ $('search-form').onsubmit = async event => {
     resultShell(hits.length + ' resultados',
       '<p class="small">' + (hits.length > 100 ? 'Mostrando os primeiros 100.' : 'Resultados nos livros selecionados.') + '</p>'
       + hits.slice(0, 100).map(([id, chapter, verse, text]) => {
-        const lang = findBook(id)?.source === 'ethiopic' && !(id === 'ENO' && enoch) ? ' lang="gez"' : '';
+        const lang = findBook(id)?.source === 'ethiopic' && !(['ENO', 'JUB', 'JUD'].includes(id) && enoch) ? ' lang="gez"' : '';
         return `<a class="result" href="${linkFor(activeBible, id, chapter, verse)}"><strong>${esc(refLabel(id, chapter, verse))}</strong><span${lang}>${esc(text)}</span></a>`;
       }).join('')
       + (hits.length ? '' : '<p>Tente outra palavra ou uma referência como João 3:16.</p>'));
@@ -496,6 +528,32 @@ $('search-form').onsubmit = async event => {
 };
 
 window.addEventListener('hashchange', () => route());
+for (const [id, delta] of [['spirit-smaller', -2], ['spirit-larger', 2]]) {
+  $(id).onclick = () => { font = Math.max(17, Math.min(33, font + delta)); document.documentElement.style.setProperty('--reading', font + 'px'); pref('bible-font', font); };
+}
+function showSpiritPage(number) {
+  const page = spiritData.pages[number - 1];
+  if (!page) return;
+  spiritPage = number;
+  $('spirit-page').innerHTML = spiritData.pages.map(p => '<option value="' + p.n + '"' + (p.n === number ? ' selected' : '') + '>Página ' + p.n + '</option>').join('');
+  $('spirit-text').innerHTML = page.blocks.map(block => '<p>' + esc(block) + '</p>').join('') || '<p>Esta página não contém texto extraível. Use as setas para continuar.</p>';
+  $('spirit-page-label').textContent = 'Página ' + number + ' de ' + spiritData.pages.length;
+  $('spirit-prev').disabled = number <= 1;
+  $('spirit-next').disabled = number >= spiritData.pages.length;
+}
+function goSpiritPage(number) { location.hash = '#espiritismo/' + spiritKey + '/' + number; }
+$('spirit-page').onchange = () => goSpiritPage(Number($('spirit-page').value));
+$('spirit-prev').onclick = () => goSpiritPage(spiritPage - 1);
+$('spirit-next').onclick = () => goSpiritPage(spiritPage + 1);
+$('spirit-search-form').onsubmit = event => {
+  event.preventDefault();
+  const query = norm($('spirit-search').value);
+  if (query.length < 2 || !spiritData) return notice('Digite pelo menos duas letras.');
+  const hits = spiritData.pages.flatMap(page => page.blocks.filter(block => norm(block).includes(query)).map(block => ({ page: page.n, block })));
+  $('spirit-results').hidden = false;
+  $('spirit-results').innerHTML = '<button type="button" id="spirit-close-results">Fechar busca</button><h3>' + hits.length + ' resultado(s)</h3>' + hits.slice(0, 50).map(hit => '<a class="result" href="#espiritismo/' + spiritKey + '/' + hit.page + '"><strong>Página ' + hit.page + '</strong><span>' + esc(hit.block.slice(0, 240)) + '</span></a>').join('') + (hits.length > 50 ? '<p>Exibindo os primeiros 50 resultados.</p>' : '');
+  $('spirit-close-results').onclick = () => $('spirit-results').hidden = true;
+};
 $('spirit-book-select').onchange = () => { location.hash = '#espiritismo/' + $('spirit-book-select').value; };
 if (!location.hash) history.replaceState(null, '', '#inicio');
 route();

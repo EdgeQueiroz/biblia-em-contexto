@@ -13,3 +13,8 @@ To regenerate the Ge’ez data, download the source XML files listed in import_e
 The Carta de Judas in Ge’ez is transcribed from [Beta maṣāḥǝft, LIT3513Epistle](https://betamasaheft.eu/works/LIT3513Epistle/main), from the same repository revision and under CC BY-SA 4.0. Numbered lines are rendered as verses, with whitespace normalized.
 
 The preliminary Portuguese 1 Enoch translation is by [Bíblia Etíope / QVNK Studio](https://bibliaetiope.com.br/pt/henok), based on R. H. Charles (1917). The 108 chapters are republished with attribution under the [source’s terms](https://bibliaetiope.com.br/pt/termos). The Portuguese text has its own reuse terms and is distinct from the CC BY-SA 4.0 Ge’ez transcription.
+
+
+## Leitura em português
+
+Jubileus: tradução preliminar de Bíblia Etíope / QVNK Studio a partir de R. H. Charles, republicada com atribuição conforme https://bibliaetiope.com.br/pt/termos ; original em https://bibliaetiope.com.br/pt/jubileus . Judas em português usa a Bíblia Portuguesa Mundial, identificada como texto de referência. As obras de Kardec foram transcritas automaticamente das edições de https://celp.org.br/apostilas/ ; A Gênese utiliza edição da Federação Espírita Brasileira (https://www.febnet.org.br/wp-content/uploads/2012/07/WEB-A-Genese-Guillon.pdf), tradução de Guillon Ribeiro. A extração pode conter erros e não foi revisada integralmente.
