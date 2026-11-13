@@ -1,46 +1,97 @@
-.hub { min-height: calc(100vh - 180px); padding: 0; background: var(--paper); }
-.hub[hidden], .workspace[hidden] { display: none; }
-.hub-shell { max-width: 1260px; margin: 0 auto; }
-.hub-intro { padding: 85px 44px 78px; max-width: 920px; }
-.hub-kicker { color: var(--accent); font: 700 11px/1.5 system-ui, sans-serif; letter-spacing: .15em; margin: 0 0 18px; }
-.hub-intro h1 { font: 64px/1.04 var(--serif); letter-spacing: -.035em; margin: 0; }
-.hub-intro h1 em { color: var(--accent); font-weight: normal; }
-.hub-intro > p:not(.hub-kicker) { color: var(--muted); max-width: 590px; font-size: 18px; line-height: 1.7; margin: 25px 0 28px; }
-.hub-primary { display: inline-flex; align-items: center; gap: 28px; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 4px; padding: 13px 19px; font-size: 14px; font-weight: 650; }
-.hub-primary:hover { opacity: .86; }
-.hub-collection { border-top: 1px solid var(--line); padding: 55px 44px 64px; }
-.hub-section-head { display: flex; gap: 35px; align-items: end; justify-content: space-between; margin-bottom: 28px; }
-.hub-section-head .hub-kicker { margin-bottom: 9px; }
-.hub-section-head h2 { font: 40px/1.1 var(--serif); margin: 0; letter-spacing: -.02em; }
-.hub-section-head > p { max-width: 390px; color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
-.hub-bible-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
-.hub-bible-card { min-height: 245px; display: flex; flex-direction: column; justify-content: space-between; padding: 29px; border: 1px solid var(--line); background: var(--bg); text-decoration: none; }
-.hub-bible-card.featured { background: var(--wash); }
-.hub-tag, .hub-work div > span { color: var(--accent); font: 700 10px/1.5 system-ui, sans-serif; letter-spacing: .12em; }
-.hub-bible-card h3 { font: 29px/1.17 var(--serif); margin: 15px 0 10px; }
-.hub-bible-card p { color: var(--muted); font-size: 14px; line-height: 1.65; max-width: 420px; margin: 0; }
-.hub-card-action, .hub-work-link { font-size: 13px; font-weight: 700; color: var(--accent); }
-.hub-card-action { margin-top: 25px; }
-.hub-bible-card:hover, .hub-work:hover { border-color: var(--accent); }
-.hub-works { border-top: 1px solid var(--line); }
-.hub-work { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
-.hub-work h3 { font: 24px/1.2 var(--serif); margin: 6px 0; }
-.hub-work p { color: var(--muted); font-size: 14px; margin: 0; }
-.hub-work-link { flex-shrink: 0; }
-.hub-source { font-size: 13px; color: var(--muted); margin: 24px 0 0; }
-.hub-home-link { font-size: 14px; white-space: nowrap; }
-@media (max-width: 680px) {
-  .hub-intro { padding: 55px 22px 52px; }
-  .hub-intro h1 { font-size: clamp(43px, 11vw, 58px); }
-  .hub-intro > p:not(.hub-kicker) { font-size: 16px; }
-  .hub-collection { padding: 38px 22px 44px; }
-  .hub-section-head { display: block; }
-  .hub-section-head h2 { font-size: 34px; }
-  .hub-section-head > p { margin-top: 13px; }
-  .hub-bible-grid { grid-template-columns: 1fr; }
-  .hub-bible-card { min-height: 205px; padding: 23px; }
-  .hub-work { align-items: flex-start; }
-  .hub-work h3 { font-size: 22px; }
-  .hub-work-link { margin-top: 7px; }
-}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
+:root { --serif: "Instrument Serif", Georgia, serif; }
+body { font-family: "DM Sans", system-ui, sans-serif; }
+header { gap: 24px; min-height: 92px; }
+.brand { flex-shrink: 0; gap: 12px; font-size: 25px; }
+.brand .monogram { width: 41px; font-size: 34px; }
+.site-nav { display: flex; align-items: center; justify-content: center; gap: clamp(12px, 2vw, 28px); flex: 1; }
+.site-nav a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; padding: 10px 0; border-bottom: 1px solid transparent; }
+.site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.header-tools { flex-shrink: 0; }
+.header-tools button { white-space: nowrap; }
+.hub { min-height: calc(100vh - 165px); padding: 0; background: var(--paper); }
+.hub[hidden], .workspace[hidden], .spirit-view[hidden] { display: none; }
+.hub-shell { max-width: 1270px; margin: 0 auto; padding: 66px 44px 86px; }
+.hub-intro { max-width: 780px; margin-bottom: 42px; }
+.hub-kicker, .spirit-kicker { color: var(--accent); font: 700 11px/1.4 "DM Sans", system-ui, sans-serif; letter-spacing: .16em; margin: 0 0 16px; }
+.hub-intro h1 { font: 65px/1.02 var(--serif); letter-spacing: -.025em; margin: 0; }
+.hub-intro h1 em { font-weight: normal; color: var(--accent); }
+.hub-intro > p:not(.hub-kicker) { color: var(--muted); max-width: 620px; font-size: 16px; line-height: 1.7; margin: 17px 0 0; }
+.collection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.collection-card { display: flex; min-width: 0; flex-direction: column; background: var(--bg); border: 1px solid var(--line); text-decoration: none; transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+.collection-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 15px 32px #30282018; }
+.collection-card:focus-visible { outline-offset: 4px; }
+.collection-art { position: relative; display: flex; flex-direction: column; justify-content: space-between; height: 235px; padding: 24px 28px; overflow: hidden; color: #f6eddd; background: #555b46; }
+.collection-art::after { content: ""; position: absolute; inset: 14px; border: 1px solid #ffffff30; pointer-events: none; }
+.collection-world .collection-art { background: linear-gradient(140deg, #5d654d, #343f31); }
+.collection-ethiopian .collection-art { background: linear-gradient(140deg, #83543a, #533127); }
+.collection-spirit .collection-art { background: linear-gradient(140deg, #344f51, #253737); }
+.cover-line { width: 34px; height: 2px; background: #ead4ae; margin-top: 6px; }
+.cover-name { position: relative; z-index: 1; font: 43px/.96 var(--serif); letter-spacing: -.015em; }
+.cover-mark { position: absolute; right: 30px; bottom: 26px; color: #eed4a8; font: 18px var(--serif); }
+.collection-info { display: flex; flex: 1; flex-direction: column; padding: 22px 24px 24px; }
+.collection-name { color: var(--ink); font: 28px/1.15 var(--serif); }
+.collection-desc { color: var(--muted); font-size: 13px; line-height: 1.6; margin-top: 9px; max-width: 280px; }
+.collection-action { color: var(--accent); font-size: 13px; font-weight: 700; margin-top: auto; padding-top: 22px; }
+.collection-action span { padding-left: 6px; }
+.workspace .bible-switch { display: none; }
+
+.spirit-view { display: grid; grid-template-columns: 250px minmax(0, 1fr); max-width: 1600px; margin: auto; min-height: calc(100vh - 170px); }
+.spirit-sidebar { padding: 32px 23px; border-right: 1px solid var(--line); }
+.spirit-back { display: inline-block; color: var(--muted); font-size: 13px; text-decoration: none; margin-bottom: 37px; }
+.spirit-back:hover { color: var(--accent); }
+.spirit-kicker { margin-bottom: 9px; }
+.spirit-sidebar h2 { margin: 0 0 23px; font: 28px/1.15 var(--serif); }
+.spirit-sidebar > label, .spirit-sidebar > select { display: none; }
+.spirit-book-list { border-top: 1px solid var(--line); }
+.spirit-book-list a { display: block; padding: 12px 10px; border-bottom: 1px solid var(--line); border-left: 2px solid transparent; text-decoration: none; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.spirit-book-list a:hover { color: var(--accent); }
+.spirit-book-list a[aria-current="page"] { color: var(--ink); background: var(--wash); border-left-color: var(--accent); font-weight: 700; }
+.spirit-reader { background: var(--paper); padding: 34px 42px 46px; min-width: 0; }
+.spirit-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; }
+.spirit-heading h1 { font: 46px/1.08 var(--serif); letter-spacing: -.02em; margin: 0; }
+.spirit-open { flex-shrink: 0; padding: 9px 13px; border: 1px solid var(--line); border-radius: 4px; text-decoration: none; font-size: 13px; }
+.spirit-open:hover { background: var(--wash); }
+.spirit-source { color: var(--muted); font-size: 12px; margin: 15px 0 22px; }
+.spirit-frame { display: block; width: 100%; height: max(670px, calc(100vh - 255px)); border: 1px solid var(--line); background: var(--bg); }
+@media (max-width: 1100px) {
+  header { height: auto; flex-wrap: wrap; padding: 16px 25px 0; }
+  .site-nav { order: 3; flex-basis: 100%; justify-content: flex-start; gap: 28px; border-top: 1px solid var(--line); }
+  .header-tools { margin-left: auto; }
+}
+@media (max-width: 680px) {
+  header { min-height: 0; padding: 16px 18px 0; gap: 14px; }
+  .brand { font-size: 21px; }
+  .brand .monogram { width: 34px; font-size: 28px; }
+  .header-tools { gap: 6px; }
+  .header-tools button { padding: 6px; font-size: 11px; }
+  .site-nav { gap: 22px; overflow-x: auto; scrollbar-width: thin; }
+  .site-nav a { padding: 12px 0; min-height: 44px; }
+  .hub-shell { padding: 46px 20px 55px; }
+  .hub-intro { margin-bottom: 29px; }
+  .hub-intro h1 { font-size: clamp(42px, 11vw, 58px); }
+  .hub-intro > p:not(.hub-kicker) { font-size: 15px; }
+  .collection-grid { grid-template-columns: 1fr; gap: 12px; }
+  .collection-card { display: grid; grid-template-columns: minmax(112px, 34%) 1fr; }
+  .collection-art { height: auto; min-height: 168px; padding: 23px 20px; }
+  .collection-art::after { inset: 10px; }
+  .cover-name { font-size: clamp(25px, 7vw, 34px); }
+  .cover-mark { right: 20px; bottom: 17px; font-size: 15px; }
+  .collection-info { padding: 19px 18px; }
+  .collection-name { font-size: 25px; }
+  .collection-desc { font-size: 12px; }
+  .collection-action { padding-top: 15px; }
+  .spirit-view { display: block; }
+  .spirit-sidebar { padding: 20px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .spirit-back { margin-bottom: 16px; }
+  .spirit-sidebar h2 { margin-bottom: 12px; }
+  .spirit-sidebar > label, .spirit-sidebar > select { display: block; }
+  .spirit-sidebar > label { margin-bottom: 4px; }
+  .spirit-book-list { display: none; }
+  .spirit-reader { padding: 26px 20px 34px; }
+  .spirit-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .spirit-heading h1 { font-size: 36px; }
+  .spirit-frame { height: 72vh; min-height: 460px; }
+}
+@media (prefers-reduced-motion: reduce) { .collection-card { transition: none; } }

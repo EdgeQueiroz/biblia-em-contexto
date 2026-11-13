@@ -9,6 +9,13 @@ const bpmSource = 'https://ebible.org/details.php?id=porbrbsl';
 const ethiopicDataRevision = '?v=2';
 const catalogs = { bpm: [], ethiopic: [] };
 const defaults = { bpm: ['JHN', 1, '1'], ethiopic: ['ENO', 1, '1'] };
+const spiritBooks = {
+  espiritos: { title: 'O Livro dos Espíritos', file: 'O-livro-dos-espiritos.pdf' },
+  mediuns: { title: 'O Livro dos Médiuns', file: 'O-livro-dos-mediuns.pdf' },
+  evangelho: { title: 'O Evangelho segundo o Espiritismo', file: 'O-Evangelho-segundo-o-Espiritismo.pdf' },
+  ceu: { title: 'O Céu e o Inferno', file: 'O-ceu-e-inferno.pdf' },
+  genese: { title: 'A Gênese', file: 'A-Genese-Allan-Kardec.pdf' },
+};
 const lastReference = {};
 const cache = {};
 let studies = [], introductions = {}, searchData, ethiopicSearchData, enochSearchData;
@@ -273,12 +280,19 @@ function setEditionNote(book) {
 }
 
 async function route(force = false) {
-  if (!catalogs.bpm.length) return;
   const raw = location.hash.slice(1);
-  const showHub = !raw || ['inicio', 'hub', 'colecao-biblica', 'colecao-espirita'].includes(raw);
+  if (raw === 'spirit-reading' && !$('spirit-view').hidden) return;
+  const showHub = !raw || ['inicio', 'hub', 'colecao-biblica'].includes(raw);
+  const showSpirit = raw === 'colecao-espirita' || raw === 'espiritismo' || raw.startsWith('espiritismo/');
   $('hub').hidden = !showHub;
-  document.querySelector('.workspace').hidden = showHub;
-  $('skip-main').href = showHub ? '#hub' : '#reading';
+  $('spirit-view').hidden = !showSpirit;
+  document.querySelector('.workspace').hidden = showHub || showSpirit;
+  $('skip-main').href = showHub ? '#hub' : showSpirit ? '#spirit-reading' : '#reading';
+  const activeArea = showHub ? '' : showSpirit ? 'spirit' : raw.startsWith('etiope/') ? 'ethiopic' : 'bpm';
+  document.querySelectorAll('.site-nav a').forEach(link => {
+    if (link.dataset.area === activeArea) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
   if (showHub) {
     ++loadId;
     document.title = 'Escrituras em Contexto';
@@ -286,6 +300,26 @@ async function route(force = false) {
     else window.scrollTo(0, 0);
     return;
   }
+  if (showSpirit) {
+    ++loadId;
+    ++searchId;
+    const requested = raw.split('/')[1] || 'espiritos';
+    const key = Object.hasOwn(spiritBooks, requested) ? requested : 'espiritos';
+    const book = spiritBooks[key];
+    const source = 'https://celp.org.br/wp-content/uploads/2023/06/' + book.file;
+    $('spirit-title').textContent = book.title;
+    $('spirit-book-select').value = key;
+    $('spirit-external').href = source;
+    $('spirit-frame').title = 'Leitura de ' + book.title;
+    if ($('spirit-frame').getAttribute('src') !== source) $('spirit-frame').src = source;
+    document.querySelectorAll('.spirit-book-list a').forEach(link => {
+      if (link.dataset.spiritBook === key) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    document.title = book.title + ' · Escrituras em Contexto';
+    return;
+  }
+  if (!catalogs.bpm.length) return;
   if (raw === 'reading' && current) return;
   const parts = raw.split('/');
   const bible = parts[0] === 'etiope' ? 'ethiopic' : 'bpm';
@@ -462,6 +496,9 @@ $('search-form').onsubmit = async event => {
 };
 
 window.addEventListener('hashchange', () => route());
+$('spirit-book-select').onchange = () => { location.hash = '#espiritismo/' + $('spirit-book-select').value; };
+if (!location.hash) history.replaceState(null, '', '#inicio');
+route();
 (async () => {
   try {
     const [books, notes, intros, ethiopicBooks] = await Promise.all([
@@ -479,7 +516,6 @@ window.addEventListener('hashchange', () => route());
       const button = event.target.closest('button');
       if (button) topic(button.dataset.topic);
     };
-    if (!location.hash) history.replaceState(null, '', '#inicio');
     await route();
   } catch {
     $('verses').innerHTML = '<p>Não foi possível abrir a biblioteca. Atualize a página para tentar novamente.</p>';
