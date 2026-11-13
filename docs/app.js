@@ -453,7 +453,7 @@ window.addEventListener('hashchange', () => route());
 (async () => {
   try {
     const [books, notes, intros, ethiopicBooks] = await Promise.all([
-      json('./data/books.json'), json('./data/studies.json'),
+      json('./data/books.json'), json('./data/studies.json?v=3'),
       json('./data/introductions.json'), json('./data/ethiopic/books.json' + ethiopicDataRevision),
     ]);
     catalogs.bpm = books;
