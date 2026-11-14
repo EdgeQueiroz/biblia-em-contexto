@@ -22,3 +22,7 @@ Jubileus: tradução preliminar de Bíblia Etíope / QVNK Studio a partir de R. 
 ## Torá
 
 Os cinco livros da seção Torá reutilizam o texto em português da Bíblia Portuguesa Mundial, identificado no leitor como tradução cristã em revisão e não como tradução judaica. Os nomes dos livros são apresentados também na tradição hebraica. Links de consulta à Sefaria são externos; nenhum texto ou comentário dessa biblioteca é republicado aqui. A disponibilidade, a licença e a numeração de cada tradução judaica em português devem ser verificadas antes de qualquer incorporação.
+
+## Navegação das obras espíritas
+
+O índice de capítulos é gerado com `node make_spirit_index.cjs` a partir dos sumários ou títulos das edições já transcritas. Ele aponta para as páginas dessas edições e não substitui a conferência no documento de origem. Preferências, posição de leitura, marcadores e anotações são armazenados no navegador do leitor; a exportação de registros é opcional.

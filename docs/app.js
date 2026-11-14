@@ -242,6 +242,7 @@ function selectVerse(number, scroll = false) {
     element.classList.toggle('selected', element.dataset.verse === verse.n)
   );
   renderStudy(verse);
+  window.ReaderUI?.onBibleVerse(verse);
   if (scroll) requestAnimationFrame(() => $('v-' + verse.n)?.scrollIntoView({ block: 'center' }));
 }
 
@@ -321,6 +322,7 @@ async function route(force = false) {
   if (showHub) {
     ++loadId;
     document.title = 'Escrituras em Contexto';
+    window.ReaderUI?.onHub();
     if (raw.startsWith('colecao-')) requestAnimationFrame(() => $(raw)?.scrollIntoView({ block: 'start' }));
     else window.scrollTo(0, 0);
     return;
@@ -405,6 +407,7 @@ async function route(force = false) {
   $('selected-ref').textContent = '';
   document.title = book.name + heading + ' · Bíblia em Contexto';
   setEditionNote(book);
+  window.ReaderUI?.onChapterPending();
 
   if (book.id.endsWith('MQ') && enochInPortuguese()) {
     $('edition-note').textContent = 'Português — tradução ainda indisponível neste leitor.';
@@ -559,6 +562,7 @@ function showSpiritPage(number) {
   $('spirit-page-label').textContent = 'Página ' + number + ' de ' + spiritData.pages.length;
   $('spirit-prev').disabled = number <= 1;
   $('spirit-next').disabled = number >= spiritData.pages.length;
+  window.ReaderUI?.onSpiritPage();
 }
 function goSpiritPage(number) { location.hash = '#espiritismo/' + spiritKey + '/' + number; }
 $('spirit-page').onchange = () => goSpiritPage(Number($('spirit-page').value));
