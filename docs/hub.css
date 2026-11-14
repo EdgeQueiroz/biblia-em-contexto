@@ -115,3 +115,8 @@ header { gap: 24px; min-height: 92px; }
 
 .spirit-font > span { display:block; color:var(--muted); font-size:12px; font-weight:700; margin-bottom:7px; }
 .spirit-font div { display:flex; gap:6px; }
+
+.collection-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.collection-torah .collection-art { background: linear-gradient(140deg, #555b76, #343c57); }
+@media (max-width: 1000px) and (min-width: 681px) { .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .collection-grid { grid-template-columns: 1fr; } }

@@ -7,8 +7,9 @@ const esc = value => String(value).replace(/[&<>"']/g, char => ({
 const norm = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const bpmSource = 'https://ebible.org/details.php?id=porbrbsl';
 const ethiopicDataRevision = '?v=2';
-const catalogs = { bpm: [], ethiopic: [] };
-const defaults = { bpm: ['JHN', 1, '1'], ethiopic: ['ENO', 1, '1'] };
+const catalogs = { bpm: [], ethiopic: [], tora: [] };
+const torahBooks = { GEN: ['Bereshit', 'בראשית', 'Genesis'], EXO: ['Shemot', 'שמות', 'Exodus'], LEV: ['Vayikrá', 'ויקרא', 'Leviticus'], NUM: ['Bamidbar', 'במדבר', 'Numbers'], DEU: ['Devarim', 'דברים', 'Deuteronomy'] };
+const defaults = { bpm: ['JHN', 1, '1'], ethiopic: ['ENO', 1, '1'], tora: ['GEN', 1, '1'] };
 const spiritBooks = {
   espiritos: { title: 'O Livro dos Espíritos', file: 'O-livro-dos-espiritos.pdf' },
   mediuns: { title: 'O Livro dos Médiuns', file: 'O-livro-dos-mediuns.pdf' },
@@ -79,7 +80,7 @@ async function json(url) {
 }
 
 function linkFor(bible, id, chapter = 1, verse = 1) {
-  return '#' + (bible === 'ethiopic' ? 'etiope/' : '') + [id, chapter, verse].join('/');
+  return '#' + (bible === 'ethiopic' ? 'etiope/' : bible === 'tora' ? 'tora/' : '') + [id, chapter, verse].join('/');
 }
 
 function findBook(id, bible = activeBible) {
@@ -89,6 +90,7 @@ function findBook(id, bible = activeBible) {
 function allowed(book) {
   if (!book) return false;
   if (activeBible === 'ethiopic') return ethiopicFilter === 'all' || book.source === 'ethiopic';
+  if (activeBible === 'tora') return true;
   return $('canon').value !== 'protestant' || book.group !== 'aa';
 }
 
@@ -103,6 +105,7 @@ function bookNames(book) {
 function listBooks() {
   const query = norm($('book-filter').value);
   const labels = {
+    torah: 'Os cinco livros',
     featured: 'Enoque, Jubileus e Meqabyan',
     oo: 'Antigo Testamento', aa: 'Deuterocanônicos e textos gregos', nn: 'Novo Testamento',
     broader: 'Novo Testamento · cânon mais amplo',
@@ -116,7 +119,7 @@ function listBooks() {
     return '<h3>' + label + '</h3>' + matching.map(book => {
       const active = book.id === current?.id;
       const chapter = book.chapters?.includes(1) ? 1 : book.chapters?.[0];
-      const badge = activeBible === 'bpm' ? book.chapters.length
+      const badge = ['bpm', 'tora'].includes(activeBible) ? book.chapters.length
         : ['ENO', 'JUB', 'JUD'].includes(book.id) ? 'PT / ge’ez'
         : book.source === 'ethiopic' ? 'ge’ez' : book.chapters?.length ? 'BPM' : 'Ficha';
       return `<a href="${linkFor(activeBible, book.id, chapter)}" class="${active ? 'active' : ''}" ${active ? 'aria-current="page"' : ''}>${esc(book.name)}<span>${badge}</span></a>`;
@@ -150,14 +153,18 @@ for (const bible of ['bpm', 'ethiopic']) {
 
 function showBibleControls() {
   const ethiopic = activeBible === 'ethiopic';
+  const torah = activeBible === 'tora';
   $('bible-bpm').setAttribute('aria-pressed', String(!ethiopic));
   $('bible-ethiopic').setAttribute('aria-pressed', String(ethiopic));
-  $('canon-label').hidden = ethiopic;
-  $('canon').hidden = ethiopic;
-  $('canon-note').hidden = ethiopic;
+  $('canon-label').hidden = ethiopic || torah;
+  $('canon').hidden = ethiopic || torah;
+  $('canon-note').hidden = ethiopic || torah;
   $('ethiopic-library-note').hidden = !ethiopic;
   $('ethiopic-filter-picker').hidden = !ethiopic;
-  $('reading-edition').textContent = ethiopic ? 'BÍBLIA ETÍOPE' : 'BÍBLIA PORTUGUESA MUNDIAL';
+  $('reading-edition').textContent = torah ? 'TORÁ · TRADIÇÃO JUDAICA' : ethiopic ? 'BÍBLIA ETÍOPE' : 'BÍBLIA PORTUGUESA MUNDIAL';
+  $('themes').parentElement.hidden = torah;
+  $('search').placeholder = torah ? 'Buscar palavra ou referência: Bereshit 1:1' : 'Buscar palavra, tema ou referência: João 3:16';
+  document.querySelector('label[for="search"]').textContent = torah ? 'Buscar na Torá' : 'Buscar na Bíblia';
 }
 
 function refLabel(id, chapter, verse) {
@@ -175,6 +182,14 @@ function externalLink(url, label) {
 }
 
 function renderStudy(verse) {
+  if (activeBible === 'tora') {
+    const [hebrewName, hebrewScript, sefariaName] = torahBooks[current.id];
+    $('selected-ref').textContent = refLabel(current.id, chapterData.c, verse.n);
+    const sefaria = `https://www.sefaria.org/${sefariaName}.${chapterData.c}.${encodeURIComponent(verse.n)}`;
+    $('comment').innerHTML = `<h3>${esc(hebrewName)} <span lang="he" dir="rtl">${esc(hebrewScript)}</span></h3><p>Este é um dos cinco livros da Torá, fundamento da tradição judaica. A divisão de capítulos e versículos pode variar entre edições.</p><h4>Para aprofundar</h4><p>${externalLink(sefaria, 'Consultar a passagem na Sefaria ↗')}</p><p class="small">O texto em português exibido aqui é a Bíblia Portuguesa Mundial, usada como referência; não é uma tradução judaica.</p>`;
+    if (verse.notes?.length) $('comment').innerHTML += '<h4>Notas da tradução BPM</h4>' + verse.notes.map(note => '<p>' + esc(note) + '</p>').join('');
+    return;
+  }
   const number = parseInt(verse.n, 10);
   const collection = current.source === 'ethiopic' && current.id !== 'JUD' ? ethiopicStudies : studies;
   const study = collection.find(item =>
@@ -240,7 +255,11 @@ function setEditionNote(book) {
     ? externalLink(book.translation, 'Ler em português em outro site · tradução preliminar ↗')
     : '';
   $('chapter-note').innerHTML = '';
-  if (book.source === 'ethiopic') {
+  if (activeBible === 'tora') {
+    $('edition-note').textContent = 'Texto de referência em português: Bíblia Portuguesa Mundial (BPM), tradução cristã em revisão.';
+    $('chapter-note').innerHTML = '<p class="small">Os nomes e a organização seguem a tradição judaica. Esta edição em português não é uma tradução judaica.</p>';
+    $('source-note').innerHTML = 'Texto em domínio público: ' + externalLink(bpmSource, 'eBible.org · BPM') + '. Para comparar, consulte a passagem na Sefaria pelo painel de estudo.';
+  } else if (book.source === 'ethiopic') {
     $('edition-note').textContent = book.id === 'JUD'
       ? 'Ge’ez · edição etíope da Carta de Judas'
       : 'Ge’ez · edição impressa da Igreja Ortodoxa Tewahedo Etíope';
@@ -294,7 +313,7 @@ async function route(force = false) {
   $('spirit-view').hidden = !showSpirit;
   document.querySelector('.workspace').hidden = showHub || showSpirit;
   $('skip-main').href = showHub ? '#hub' : showSpirit ? '#spirit-reading' : '#reading';
-  const activeArea = showHub ? '' : showSpirit ? 'spirit' : raw.startsWith('etiope/') ? 'ethiopic' : 'bpm';
+  const activeArea = showHub ? '' : showSpirit ? 'spirit' : raw.startsWith('etiope/') ? 'ethiopic' : raw.startsWith('tora/') ? 'tora' : 'bpm';
   document.querySelectorAll('.site-nav a').forEach(link => {
     if (link.dataset.area === activeArea) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
@@ -341,8 +360,8 @@ async function route(force = false) {
   if (!catalogs.bpm.length) return;
   if (raw === 'reading' && current) return;
   const parts = raw.split('/');
-  const bible = parts[0] === 'etiope' ? 'ethiopic' : 'bpm';
-  if (bible === 'ethiopic') parts.shift();
+  const bible = parts[0] === 'etiope' ? 'ethiopic' : parts[0] === 'tora' ? 'tora' : 'bpm';
+  if (bible === 'ethiopic' || bible === 'tora') parts.shift();
   const [id, chapterString, verse] = !parts[0] || raw === 'reading' ? defaults[bible] : parts;
   const book = findBook(id, bible);
   const chapter = Number(chapterString ?? 1);
@@ -379,7 +398,7 @@ async function route(force = false) {
   const heading = book.chapters ? (chapter === 0 ? ' · Prólogo' : ' ' + chapter) : '';
   $('chapter-title').innerHTML = esc(book.name) + (heading ? '<em>' + heading + '</em>' : '');
   $('testament').textContent = {
-    oo: 'ANTIGO TESTAMENTO', aa: 'TEXTOS DO CÂNON CATÓLICO',
+    torah: 'OS CINCO LIVROS', oo: 'ANTIGO TESTAMENTO', aa: 'TEXTOS DO CÂNON CATÓLICO',
     nn: 'NOVO TESTAMENTO', broader: 'NOVO TESTAMENTO · CÂNON MAIS AMPLO',
   }[book.group];
   $('comment').innerHTML = '';
@@ -416,7 +435,7 @@ async function route(force = false) {
     const verses = data[chapter];
     if (!verses?.length) throw Error('Capítulo indisponível.');
     chapterData = { c: chapter, verses };
-    const introduction = introductions[id + '/' + chapter];
+    const introduction = activeBible === 'tora' ? null : introductions[id + '/' + chapter];
     const lang = book.source === 'ethiopic' && !inPortuguese ? ' lang="gez"' : '';
     $('verses').innerHTML = (introduction ? '<p class="psalm-title">' + esc(introduction) + '</p>' : '')
       + verses.map(item => `<p class="verse" id="v-${esc(item.n)}" data-verse="${esc(item.n)}"><a href="${linkFor(bible, id, chapter, item.n)}" aria-label="Estudar ${esc(refLabel(id, chapter, item.n))}">${esc(item.n)}</a><span${lang}>${esc(item.t)}</span>${item.notes.length ? ' <span class="small" title="Há notas sobre este versículo">*</span>' : ''}</p>`).join('');
@@ -486,7 +505,7 @@ $('search-form').onsubmit = async event => {
       return;
     }
   }
-  const theme = studies.find(item => norm(item.theme) === query)?.theme;
+  const theme = activeBible === 'tora' ? null : studies.find(item => norm(item.theme) === query)?.theme;
   if (theme) return topic(theme);
   resultShell('Buscando…', '<p>Consultando o texto disponível.</p>');
   try {
@@ -564,6 +583,7 @@ route();
       json('./data/introductions.json'), json('./data/ethiopic/books.json' + ethiopicDataRevision),
     ]);
     catalogs.bpm = books;
+    catalogs.tora = books.filter(book => torahBooks[book.id]).map(book => ({ ...book, name: book.name + ' · ' + torahBooks[book.id][0], aliases: [book.name, torahBooks[book.id][0], torahBooks[book.id][1]], group: 'torah' }));
     catalogs.ethiopic = buildEthiopicCatalog(books, ethiopicBooks);
     studies = notes;
     introductions = intros;

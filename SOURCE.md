@@ -18,3 +18,7 @@ The preliminary Portuguese 1 Enoch translation is by [Bíblia Etíope / QVNK Stu
 ## Leitura em português
 
 Jubileus: tradução preliminar de Bíblia Etíope / QVNK Studio a partir de R. H. Charles, republicada com atribuição conforme https://bibliaetiope.com.br/pt/termos ; original em https://bibliaetiope.com.br/pt/jubileus . Judas em português usa a Bíblia Portuguesa Mundial, identificada como texto de referência. As obras de Kardec foram transcritas automaticamente das edições de https://celp.org.br/apostilas/ ; A Gênese utiliza edição da Federação Espírita Brasileira (https://www.febnet.org.br/wp-content/uploads/2012/07/WEB-A-Genese-Guillon.pdf), tradução de Guillon Ribeiro. A extração pode conter erros e não foi revisada integralmente.
+
+## Torá
+
+Os cinco livros da seção Torá reutilizam o texto em português da Bíblia Portuguesa Mundial, identificado no leitor como tradução cristã em revisão e não como tradução judaica. Os nomes dos livros são apresentados também na tradição hebraica. Links de consulta à Sefaria são externos; nenhum texto ou comentário dessa biblioteca é republicado aqui. A disponibilidade, a licença e a numeração de cada tradução judaica em português devem ser verificadas antes de qualquer incorporação.
