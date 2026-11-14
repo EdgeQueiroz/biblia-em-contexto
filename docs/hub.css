@@ -29,6 +29,7 @@ header { gap: 24px; min-height: 92px; }
 .collection-spirit .collection-art { background: linear-gradient(140deg, #344f51, #253737); }
 .cover-line { width: 34px; height: 2px; background: #ead4ae; margin-top: 6px; }
 .cover-name { position: relative; z-index: 1; font: 43px/.96 var(--serif); letter-spacing: -.015em; }
+.collection-spirit .cover-name { font-size: clamp(23px, 2.8vw, 43px); overflow-wrap: anywhere; }
 .cover-mark { position: absolute; right: 30px; bottom: 26px; color: #eed4a8; font: 18px var(--serif); }
 .collection-info { display: flex; flex: 1; flex-direction: column; padding: 22px 24px 24px; }
 .collection-name { color: var(--ink); font: 28px/1.15 var(--serif); }
@@ -77,6 +78,7 @@ header { gap: 24px; min-height: 92px; }
   .collection-art { height: auto; min-height: 168px; padding: 23px 20px; }
   .collection-art::after { inset: 10px; }
   .cover-name { font-size: clamp(25px, 7vw, 34px); }
+  .collection-spirit .cover-name { font-size: clamp(15px, 4.5vw, 23px); line-height: 1.05; }
   .cover-mark { right: 20px; bottom: 17px; font-size: 15px; }
   .collection-info { padding: 19px 18px; }
   .collection-name { font-size: 25px; }
